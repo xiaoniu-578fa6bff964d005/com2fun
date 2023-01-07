@@ -1,0 +1,11 @@
+build
+dist
+*.egg-info/
+.installed.cfg
+*.egg
+*__pycache__*
+*.pyc
+com2fun.toml
+com2fun.db
+com2fun.db.index
+com2fun.db.lock

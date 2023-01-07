@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "com2fun"
+version = "0.1.4"
+description = "Transform document into function"
+authors = ["Zhengmian Hu <huzhengmian@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+openai = "^0.25.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
