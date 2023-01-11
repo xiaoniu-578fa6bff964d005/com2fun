@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "com2fun"
-version = "0.1.4"
+version = "0.1.5"
 description = "Transform document into function"
 authors = ["Zhengmian Hu <huzhengmian@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.6"
 openai = "^0.25.0"
 
 
