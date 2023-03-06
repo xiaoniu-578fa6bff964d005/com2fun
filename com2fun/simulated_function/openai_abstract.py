@@ -12,7 +12,7 @@ from . import InvalidCompletionResult, SimulatedFunction
 
 DEFAULT_PARAM = {
     "temperature": 0.0,
-    "max_tokens": 2048,
+    #  "max_tokens": 2048,
     "stream": False,
 }
 
@@ -62,6 +62,16 @@ class SimpleOpenAISF(SimulatedFunction):
             r["prompt"] = prompt
         elif isinstance(self, ChatOpenAISF):
             r["messages"] = messages
+        if response["choices"][0]["finish_reason"] == "length":
+            raise InvalidCompletionResult(
+                "The completion result is too long.",
+                r,
+            )
+        elif response["choices"][0]["finish_reason"] != "stop":
+            raise InvalidCompletionResult(
+                "Unknown finish_reson",
+                r,
+            )
         try:
             result = self.invoke_read_out_method().deserialize(result_str)
         except Exception as e:
