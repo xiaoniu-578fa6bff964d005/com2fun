@@ -29,7 +29,7 @@ def func_definition(func_def, input_prefix=INPUT_PREFIX):
         input_prefix
         + INDENT_REGEX.match(prompts[-1][len(input_prefix) :]).group()
         #  + "[...Implementation Omitted...]\n"
-        + f"_{func_def.intension.name}(*locals())\n"  # TODO
+        + f"return _{func_def.intension.name}(*locals())\n"  # TODO
     )
     prompts.append(input_prefix + "\n")
     return prompts
@@ -51,6 +51,10 @@ def query(func_def, args, kwargs, read_out):
     return [INPUT_PREFIX + read_out.cmd.format(invoke(func_def, args, kwargs)) + "\n"]
 
 
+def chat_query(func_def, args, kwargs, read_out):
+    return read_out.cmd.format(invoke(func_def, args, kwargs))
+
+
 def example(func_def, example: InOutExample, read_out):
     prompts = []
     if example.comments is not None:
@@ -68,3 +72,15 @@ def example(func_def, example: InOutExample, read_out):
         read_out.serialize(example.result) + "\n",
     )
     return prompts
+
+
+def chat_example(func_def, example: InOutExample, read_out):
+    prompts = []
+    if example.comments is not None:
+        prompts += ["# " + l for l in example.comments.splitlines(keepends=True)]
+        if prompts[-1][-1] != "\n":
+            prompts[-1] += "\n"
+    prompts += [read_out.cmd.format(invoke(func_def, example.args, example.kwargs))]
+    user_content = "".join(prompts)
+    assistant_content = read_out.serialize(example.result)
+    return user_content, assistant_content

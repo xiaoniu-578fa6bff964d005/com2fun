@@ -11,9 +11,6 @@ import ast
 from . import InvalidCompletionResult, SimulatedFunction
 
 DEFAULT_PARAM = {
-    "model": "text-davinci-003",
-    #  "model": "code-davinci-002",
-    "best_of": 1,
     "temperature": 0.0,
     "max_tokens": 2048,
     "stream": False,
@@ -33,10 +30,6 @@ class SimpleOpenAISF(SimulatedFunction):
         self.param = {}
         super().__init__(*args, **kwargs)
 
-    @abstractmethod
-    def invoke_prompt(self, *args, **kwargs) -> str:
-        """Should return the prompt that is posted to OpenAI API"""
-
     def invoke_read_out_method(self) -> ReadOut:
         # get return type
         sig = self.func_def.intension.signature
@@ -49,17 +42,26 @@ class SimpleOpenAISF(SimulatedFunction):
         return {**DEFAULT_PARAM, **type(self).default_param, **self.param}
 
     def invoke(self, *args, **kwargs):
-        prompt = self.invoke_prompt(*args, **kwargs)
         param = self.invoke_param()
-
-        response = openai.Completion.create(prompt=prompt, **param)
-        result_str = response["choices"][0]["text"]
+        if isinstance(self, CompletionOpenAISF):
+            prompt = self.invoke_prompt(*args, **kwargs)
+            response = openai.Completion.create(prompt=prompt, **param)
+            result_str = response["choices"][0]["text"]
+        elif isinstance(self, ChatOpenAISF):
+            messages = self.invoke_messages(*args, **kwargs)
+            response = openai.ChatCompletion.create(messages=messages, **param)
+            result_str = response["choices"][0]["message"]["content"]
+        else:
+            raise Exception("Unknown OpenAISF type.")
         r = {
-            "prompt": prompt,
             "param": param,
             "response": response,
             "result_str": result_str,
         }
+        if isinstance(self, CompletionOpenAISF):
+            r["prompt"] = prompt
+        elif isinstance(self, ChatOpenAISF):
+            r["messages"] = messages
         try:
             result = self.invoke_read_out_method().deserialize(result_str)
         except Exception as e:
@@ -74,6 +76,33 @@ class SimpleOpenAISF(SimulatedFunction):
             **r,
             "return": result,
         }
+
+
+class CompletionOpenAISF(SimpleOpenAISF):
+    default_param = {
+        **SimpleOpenAISF.default_param,
+        "model": "text-davinci-003",
+        "best_of": 1,
+        #  "model": "code-davinci-002",
+    }
+
+    @abstractmethod
+    def invoke_prompt(self, *args, **kwargs) -> str:
+        """Should return the prompt that is posted to OpenAI API"""
+
+
+class ChatOpenAISF(SimpleOpenAISF):
+    default_param = {
+        **SimpleOpenAISF.default_param,
+        "model": "gpt-3.5-turbo",
+    }
+
+    @abstractmethod
+    def invoke_messages(self, *args, **kwargs) -> list[dict]:
+        """Should return the messages that is posted to OpenAI API.
+        Example:
+        [{"role": "user", "content": "Hello world!"}]
+        """
 
 
 # cmd is the one line python command that could be used in python interpreter

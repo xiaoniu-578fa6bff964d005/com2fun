@@ -3,6 +3,6 @@
 
 from .abstract import *
 from .openai_abstract import *
-from .python_interpreter import PythonInterpreterSF
+from .python_interpreter import PythonInterpreterSF, ChatBasedPythonInterpreterSF
 from .flat import FlatSF
 from .template import TemplateSF
