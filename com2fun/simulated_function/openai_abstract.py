@@ -41,15 +41,23 @@ class SimpleOpenAISF(SimulatedFunction):
     def invoke_param(self) -> dict:
         return {**DEFAULT_PARAM, **type(self).default_param, **self.param}
 
+    def _request(self, method: str, **kwargs):
+        if method == "complete":
+            return openai.Completion.create(**kwargs)
+        elif method == "chat":
+            return openai.ChatCompletion.create(**kwargs)
+        else:
+            raise ValueError("Unknown method: {}".format(method))
+
     def invoke(self, *args, **kwargs):
         param = self.invoke_param()
         if isinstance(self, CompletionOpenAISF):
             prompt = self.invoke_prompt(*args, **kwargs)
-            response = openai.Completion.create(prompt=prompt, **param)
+            response = self._request("complete", prompt=prompt, **param)
             result_str = response["choices"][0]["text"]
         elif isinstance(self, ChatOpenAISF):
             messages = self.invoke_messages(*args, **kwargs)
-            response = openai.ChatCompletion.create(messages=messages, **param)
+            response = self._request("chat", messages=messages, **param)
             result_str = response["choices"][0]["message"]["content"]
         else:
             raise Exception("Unknown OpenAISF type.")
@@ -62,12 +70,13 @@ class SimpleOpenAISF(SimulatedFunction):
             r["prompt"] = prompt
         elif isinstance(self, ChatOpenAISF):
             r["messages"] = messages
-        if response["choices"][0]["finish_reason"] == "length":
+        finish_reason = response["choices"][0]["finish_reason"]
+        if finish_reason == "length":
             raise InvalidCompletionResult(
                 "The completion result is too long.",
                 r,
             )
-        elif response["choices"][0]["finish_reason"] != "stop":
+        elif finish_reason != "stop" and finish_reason is not None:
             raise InvalidCompletionResult(
                 "Unknown finish_reson",
                 r,
