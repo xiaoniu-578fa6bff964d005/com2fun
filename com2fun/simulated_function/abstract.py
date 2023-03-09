@@ -35,6 +35,10 @@ class SimulatedFunction(ABC):
         self.check_arg(*args, **kwargs)
         return self.invoke(*args, **kwargs)["return"]
 
+    async def acall(self, *args, **kwargs):
+        self.check_arg(*args, **kwargs)
+        return (await self.ainvoke(*args, **kwargs))["return"]
+
     def add_example(self, *args, **kwargs):
         self.check_arg(*args, **kwargs)
         examples = self.func_def.extension.examples

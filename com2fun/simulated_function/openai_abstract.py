@@ -49,6 +49,41 @@ class SimpleOpenAISF(SimulatedFunction):
         else:
             raise ValueError("Unknown method: {}".format(method))
 
+    async def _arequest(self, method: str, **kwargs):
+        if method == "complete":
+            return await openai.Completion.acreate(**kwargs)
+        elif method == "chat":
+            return await openai.ChatCompletion.acreate(**kwargs)
+        else:
+            raise ValueError("Unknown method: {}".format(method))
+
+    def invoke_postprocessing(self, r):
+        finish_reason = r["response"]["choices"][0]["finish_reason"]
+        if finish_reason == "length":
+            raise InvalidCompletionResult(
+                "The completion result is too long.",
+                r,
+            )
+        elif finish_reason != "stop" and finish_reason is not None:
+            raise InvalidCompletionResult(
+                "Unknown finish_reson",
+                r,
+            )
+        try:
+            result = self.invoke_read_out_method().deserialize(r["result_str"])
+        except Exception as e:
+            raise InvalidCompletionResult(
+                "The completion result is not serializable.",
+                {
+                    **r,
+                    "error": e,
+                },
+            )
+        return {
+            **r,
+            "return": result,
+        }
+
     def invoke(self, *args, **kwargs):
         param = self.invoke_param()
         if isinstance(self, CompletionOpenAISF):
@@ -70,39 +105,39 @@ class SimpleOpenAISF(SimulatedFunction):
             r["prompt"] = prompt
         elif isinstance(self, ChatOpenAISF):
             r["messages"] = messages
-        finish_reason = response["choices"][0]["finish_reason"]
-        if finish_reason == "length":
-            raise InvalidCompletionResult(
-                "The completion result is too long.",
-                r,
-            )
-        elif finish_reason != "stop" and finish_reason is not None:
-            raise InvalidCompletionResult(
-                "Unknown finish_reson",
-                r,
-            )
-        try:
-            result = self.invoke_read_out_method().deserialize(result_str)
-        except Exception as e:
-            raise InvalidCompletionResult(
-                "The completion result is not serializable.",
-                {
-                    **r,
-                    "error": e,
-                },
-            )
-        return {
-            **r,
-            "return": result,
+        return self.invoke_postprocessing(r)
+
+    async def ainvoke(self, *args, **kwargs):
+        param = self.invoke_param()
+        if isinstance(self, CompletionOpenAISF):
+            prompt = self.invoke_prompt(*args, **kwargs)
+            response = await self._arequest("complete", prompt=prompt, **param)
+            result_str = response["choices"][0]["text"]
+        elif isinstance(self, ChatOpenAISF):
+            messages = self.invoke_messages(*args, **kwargs)
+            response = await self._arequest("chat", messages=messages, **param)
+            result_str = response["choices"][0]["message"]["content"]
+        else:
+            raise Exception("Unknown OpenAISF type.")
+        r = {
+            "param": param,
+            "response": response,
+            "result_str": result_str,
         }
+        if isinstance(self, CompletionOpenAISF):
+            r["prompt"] = prompt
+        elif isinstance(self, ChatOpenAISF):
+            r["messages"] = messages
+        return self.invoke_postprocessing(r)
 
 
 class CompletionOpenAISF(SimpleOpenAISF):
     default_param = {
         **SimpleOpenAISF.default_param,
+        #  "model": "code-davinci-002",
         "model": "text-davinci-003",
         "best_of": 1,
-        #  "model": "code-davinci-002",
+        "max_tokens": 2048,
     }
 
     @abstractmethod
