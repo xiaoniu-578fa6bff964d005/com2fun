@@ -70,7 +70,15 @@ class SimpleOpenAISF(SimulatedFunction):
                 r,
             )
         try:
-            result = self.invoke_read_out_method().deserialize(r["result_str"])
+            result_str = r["result_str"]
+            if isinstance(result_str, list):
+                result = [
+                    self.invoke_read_out_method().deserialize(s) for s in result_str
+                ]
+            elif isinstance(result_str, str):
+                result = self.invoke_read_out_method().deserialize(result_str)
+            else:
+                raise ValueError()
         except Exception as e:
             raise InvalidCompletionResult(
                 "The completion result is not serializable.",
@@ -130,13 +138,74 @@ class SimpleOpenAISF(SimulatedFunction):
             r["messages"] = messages
         return self.invoke_postprocessing(r)
 
+    def invoke_n(self, n: int, *args, **kwargs):
+        param = self.invoke_param()
+        if isinstance(self, CompletionOpenAISF):
+            prompt = self.invoke_prompt(*args, **kwargs)
+            response = self._request("complete", prompt=prompt, **param, n=n)
+            result_str = [c["text"] for c in response["choices"]]
+        elif isinstance(self, ChatOpenAISF):
+            messages = self.invoke_messages(*args, **kwargs)
+            response = self._request("chat", messages=messages, **param, n=n)
+            result_str = [c["message"]["content"] for c in response["choices"]]
+        else:
+            raise Exception("Unknown OpenAISF type.")
+        r = {
+            "param": param,
+            "response": response,
+            "result_str": result_str,
+        }
+        if isinstance(self, CompletionOpenAISF):
+            r["prompt"] = prompt
+        elif isinstance(self, ChatOpenAISF):
+            r["messages"] = messages
+        return self.invoke_postprocessing(r)
+
+    async def ainvoke_n(self, n: int, *args, **kwargs):
+        param = self.invoke_param()
+        if isinstance(self, CompletionOpenAISF):
+            prompt = self.invoke_prompt(*args, **kwargs)
+            response = await self._arequest("complete", prompt=prompt, **param, n=n)
+            result_str = [c["text"] for c in response["choices"]]
+        elif isinstance(self, ChatOpenAISF):
+            messages = self.invoke_messages(*args, **kwargs)
+            response = await self._arequest("chat", messages=messages, **param, n=n)
+            result_str = [c["message"]["content"] for c in response["choices"]]
+        else:
+            raise Exception("Unknown OpenAISF type.")
+        r = {
+            "param": param,
+            "response": response,
+            "result_str": result_str,
+        }
+        if isinstance(self, CompletionOpenAISF):
+            r["prompt"] = prompt
+        elif isinstance(self, ChatOpenAISF):
+            r["messages"] = messages
+        return self.invoke_postprocessing(r)
+
+    def sample(self, *args, **kwargs):
+        self.check_arg(*args, **kwargs)
+
+        def f(n: int):
+            return self.invoke_n(n, *args, **kwargs)["return"]
+
+        return f
+
+    def asample(self, *args, **kwargs):
+        self.check_arg(*args, **kwargs)
+
+        async def af(n: int):
+            return (await self.ainvoke_n(n, *args, **kwargs))["return"]
+
+        return af
+
 
 class CompletionOpenAISF(SimpleOpenAISF):
     default_param = {
         **SimpleOpenAISF.default_param,
         #  "model": "code-davinci-002",
         "model": "text-davinci-003",
-        "best_of": 1,
         "max_tokens": 2048,
     }
 

@@ -31,6 +31,10 @@ class SimulatedFunction(ABC):
         the rest is the details of the function call including prompt, param(eters for OpenAI API), (full) response etc.
         """
 
+    @abstractmethod
+    async def ainvoke(self, *args, **kwargs) -> dict[str, Any]:
+        """async version of invoke"""
+
     def __call__(self, *args, **kwargs):
         self.check_arg(*args, **kwargs)
         return self.invoke(*args, **kwargs)["return"]
