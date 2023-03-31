@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "com2fun"
-version = "0.1.6"
+version = "0.1.7"
 description = "Transform document into function"
 authors = ["Zhengmian Hu <huzhengmian@gmail.com>"]
 readme = "README.md"

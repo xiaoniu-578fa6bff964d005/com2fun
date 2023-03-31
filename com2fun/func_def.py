@@ -33,6 +33,13 @@ class FunctionIntension:
             for l in self.full_source.splitlines(keepends=True)
             if not is_com2fun_decorator(l)
         ]
+
+        def remove_common_prefix(r):
+            prefix = min([len(l) - len(l.lstrip()) for l in r])
+            return [l[prefix:] for l in r]
+
+        r = remove_common_prefix(r)
+
         return "".join(r)
 
 
