@@ -5,7 +5,7 @@ from .func_def import *
 from .simulated_function import *
 
 
-def com2fun(func, SF=PythonInterpreterSF):
+def com2fun(func, SF=ChatBasedPythonInterpreterSF):
     func_def = to_func_def(func)
     return SF(func_def)
 

@@ -45,7 +45,7 @@ class SimpleOpenAISF(SimulatedFunction):
         if method == "complete":
             return openai.Completion.create(**kwargs)
         elif method == "chat":
-            return openai.ChatCompletion.create(**kwargs)
+            return openai.chat.completions.create(**kwargs)
         else:
             raise ValueError("Unknown method: {}".format(method))
 
@@ -53,12 +53,12 @@ class SimpleOpenAISF(SimulatedFunction):
         if method == "complete":
             return await openai.Completion.acreate(**kwargs)
         elif method == "chat":
-            return await openai.ChatCompletion.acreate(**kwargs)
+            return await openai.chat.completions.create(**kwargs)
         else:
             raise ValueError("Unknown method: {}".format(method))
 
     def invoke_postprocessing(self, r):
-        finish_reason = r["response"]["choices"][0]["finish_reason"]
+        finish_reason = r["response"].choices[0].finish_reason
         if finish_reason == "length":
             raise InvalidCompletionResult(
                 "The completion result is too long.",
@@ -97,11 +97,11 @@ class SimpleOpenAISF(SimulatedFunction):
         if isinstance(self, CompletionOpenAISF):
             prompt = self.invoke_prompt(*args, **kwargs)
             response = self._request("complete", prompt=prompt, **param)
-            result_str = response["choices"][0]["text"]
+            result_str = response.choices[0].text
         elif isinstance(self, ChatOpenAISF):
             messages = self.invoke_messages(*args, **kwargs)
             response = self._request("chat", messages=messages, **param)
-            result_str = response["choices"][0]["message"]["content"]
+            result_str = response.choices[0].message.content
         else:
             raise Exception("Unknown OpenAISF type.")
         r = {
@@ -120,11 +120,11 @@ class SimpleOpenAISF(SimulatedFunction):
         if isinstance(self, CompletionOpenAISF):
             prompt = self.invoke_prompt(*args, **kwargs)
             response = await self._arequest("complete", prompt=prompt, **param)
-            result_str = response["choices"][0]["text"]
+            result_str = response.choices[0].text
         elif isinstance(self, ChatOpenAISF):
             messages = self.invoke_messages(*args, **kwargs)
             response = await self._arequest("chat", messages=messages, **param)
-            result_str = response["choices"][0]["message"]["content"]
+            result_str = response.choices[0].message.content
         else:
             raise Exception("Unknown OpenAISF type.")
         r = {
@@ -143,11 +143,11 @@ class SimpleOpenAISF(SimulatedFunction):
         if isinstance(self, CompletionOpenAISF):
             prompt = self.invoke_prompt(*args, **kwargs)
             response = self._request("complete", prompt=prompt, **param, n=n)
-            result_str = [c["text"] for c in response["choices"]]
+            result_str = [c.text for c in response.choices]
         elif isinstance(self, ChatOpenAISF):
             messages = self.invoke_messages(*args, **kwargs)
             response = self._request("chat", messages=messages, **param, n=n)
-            result_str = [c["message"]["content"] for c in response["choices"]]
+            result_str = [c.message.content for c in response.choices]
         else:
             raise Exception("Unknown OpenAISF type.")
         r = {
@@ -166,11 +166,11 @@ class SimpleOpenAISF(SimulatedFunction):
         if isinstance(self, CompletionOpenAISF):
             prompt = self.invoke_prompt(*args, **kwargs)
             response = await self._arequest("complete", prompt=prompt, **param, n=n)
-            result_str = [c["text"] for c in response["choices"]]
+            result_str = [c.text for c in response.choices]
         elif isinstance(self, ChatOpenAISF):
             messages = self.invoke_messages(*args, **kwargs)
             response = await self._arequest("chat", messages=messages, **param, n=n)
-            result_str = [c["message"]["content"] for c in response["choices"]]
+            result_str = [c.message.content for c in response.choices]
         else:
             raise Exception("Unknown OpenAISF type.")
         r = {
