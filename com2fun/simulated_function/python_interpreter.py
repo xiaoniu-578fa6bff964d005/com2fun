@@ -55,7 +55,6 @@ class ChatBasedPythonInterpreterSF(ChatOpenAISF):
             }
         )
         for i in self.func_def.extension.examples:
-
             user_content, assistant_content = gen_prompts.chat_example(
                 self.func_def,
                 self.func_def.extension.examples[i],
