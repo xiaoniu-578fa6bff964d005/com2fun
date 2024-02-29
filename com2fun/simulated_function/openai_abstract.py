@@ -28,6 +28,7 @@ class SimpleOpenAISF(SimulatedFunction):
 
     def __init__(self, *args, **kwargs):
         self.param = {}
+        self.client = openai
         super().__init__(*args, **kwargs)
 
     def invoke_read_out_method(self) -> ReadOut:
@@ -43,17 +44,17 @@ class SimpleOpenAISF(SimulatedFunction):
 
     def _request(self, method: str, **kwargs):
         if method == "complete":
-            return openai.Completion.create(**kwargs)
+            return self.client.Completion.create(**kwargs)
         elif method == "chat":
-            return openai.chat.completions.create(**kwargs)
+            return self.client.chat.completions.create(**kwargs)
         else:
             raise ValueError("Unknown method: {}".format(method))
 
     async def _arequest(self, method: str, **kwargs):
         if method == "complete":
-            return await openai.Completion.acreate(**kwargs)
+            return await self.client.Completion.acreate(**kwargs)
         elif method == "chat":
-            return await openai.chat.completions.create(**kwargs)
+            return await self.client.chat.completions.create(**kwargs)
         else:
             raise ValueError("Unknown method: {}".format(method))
 
