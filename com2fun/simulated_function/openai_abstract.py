@@ -44,7 +44,7 @@ class SimpleOpenAISF(SimulatedFunction):
 
     def _request(self, method: str, **kwargs):
         if method == "complete":
-            return self.client.Completion.create(**kwargs)
+            return self.client.completions.create(**kwargs)
         elif method == "chat":
             return self.client.chat.completions.create(**kwargs)
         else:
@@ -52,7 +52,7 @@ class SimpleOpenAISF(SimulatedFunction):
 
     async def _arequest(self, method: str, **kwargs):
         if method == "complete":
-            return await self.client.Completion.acreate(**kwargs)
+            return await self.client.completions.acreate(**kwargs)
         elif method == "chat":
             return await self.client.chat.completions.create(**kwargs)
         else:
