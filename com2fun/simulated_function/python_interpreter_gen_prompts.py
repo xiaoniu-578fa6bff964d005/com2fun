@@ -17,10 +17,20 @@ def intepreter_header():
 
 
 def func_query_format():
-    return [INPUT_PREFIX + "1+1\n", "2\n"]
+    #  return [INPUT_PREFIX + "1+1\n", "2\n"]
+    return [
+        INPUT_PREFIX + "1+1\n",
+        "2\n",
+        INPUT_PREFIX + "import strongai\n",
+        INPUT_PREFIX + 'strongai._top("university", 3)\n',
+        "['MIT', 'Stanford', 'Harvard']\n",
+    ]
 
 
 def func_definition(func_def, input_prefix=INPUT_PREFIX):
+    #  prompts = [
+    #      input_prefix + "import strongai\n",
+    #  ]
     prompts = [
         input_prefix + l
         for l in func_def.intension.clean_source().splitlines(keepends=True)
@@ -29,7 +39,8 @@ def func_definition(func_def, input_prefix=INPUT_PREFIX):
         input_prefix
         + INDENT_REGEX.match(prompts[-1][len(input_prefix) :]).group()
         #  + "[...Implementation Omitted...]\n"
-        + f"_{func_def.intension.name}(*locals())\n"  # TODO
+        #  + f"_{func_def.intension.name}(*locals())\n"
+        + f"strongai._{func_def.intension.name}(*locals())\n"
     )
     prompts.append(input_prefix + "\n")
     return prompts

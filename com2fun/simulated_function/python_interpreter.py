@@ -39,6 +39,16 @@ class ChatBasedPythonInterpreterSF(ChatOpenAISF):
             {"role": "system", "content": "Simulate a python interpreter."},
             {"role": "user", "content": "1+1"},
             {"role": "assistant", "content": "2"},
+            {
+                "role": "user",
+                "content": "import strongai",
+            },
+            {"role": "assistant", "content": ""},
+            {
+                "role": "user",
+                "content": 'strongai._top("university", 3)',
+            },
+            {"role": "assistant", "content": "['MIT', 'Stanford', 'Harvard']"},
         ]
         messages.append(
             {
