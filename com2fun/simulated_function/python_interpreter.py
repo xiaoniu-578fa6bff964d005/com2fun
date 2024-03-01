@@ -35,52 +35,9 @@ class ChatBasedPythonInterpreterSF(ChatOpenAISF):
     }
 
     def invoke_messages(self, *args, **kwargs) -> list[dict]:
+        prompt = PythonInterpreterSF.invoke_prompt(self, *args, **kwargs)
+
         messages = [
-            {"role": "system", "content": "Simulate a python interpreter."},
-            {"role": "user", "content": "1+1"},
-            {"role": "assistant", "content": "2"},
-            {
-                "role": "user",
-                "content": "import strongai",
-            },
-            {"role": "assistant", "content": ""},
-            {
-                "role": "user",
-                "content": 'strongai._top("university", 3)',
-            },
-            {"role": "assistant", "content": "['MIT', 'Stanford', 'Harvard']"},
+            {"role": "user", "content": prompt},
         ]
-        messages.append(
-            {
-                "role": "user",
-                "content": "".join(
-                    gen_prompts.func_definition(self.func_def, input_prefix="")[:-1]
-                ),
-            }
-        )
-        messages.append(
-            {
-                "role": "assistant",
-                "content": "",
-            }
-        )
-        for i in self.func_def.extension.examples:
-            user_content, assistant_content = gen_prompts.chat_example(
-                self.func_def,
-                self.func_def.extension.examples[i],
-                read_out=self.invoke_read_out_method(),
-            )
-            messages.append({"role": "user", "content": user_content})
-            messages.append({"role": "assistant", "content": assistant_content})
-        messages.append(
-            {
-                "role": "user",
-                "content": gen_prompts.chat_query(
-                    self.func_def,
-                    args,
-                    kwargs,
-                    read_out=self.invoke_read_out_method(),
-                ),
-            }
-        )
         return messages
