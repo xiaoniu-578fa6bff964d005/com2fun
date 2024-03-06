@@ -12,6 +12,8 @@ pip install --upgrade com2fun
 
 Basic usage:
 ```
+import com2fun
+
 @com2fun.com2fun
 def top(category: str, n) -> list[str]:
     """top n items"""
@@ -86,52 +88,16 @@ Out [5]:
 In  [1]: top.add_example('continents', 3)(['Asia', 'Africa', 'North America'])
 ```
 
-## Different Prompt Formats
+## Set Client
 
-### Python Interpreter
-
+By default, com2fun uses the OpenAI library `openai` globally. You can set the client for com2fun by 
 ```
-In  [2]: pirnt(top.invoke_prompt("Pen Brand", 3))
->>> 1
-1
->>> def top(category: str, n) -> list[str]:
->>>     """Return a list of top-n items in a category."""
->>>     _top(*locals())
->>>
->>> top('continents', 3)
-['Asia', 'Africa', 'North America']
->>> top('Pen Brand', 3)
-
+@com2fun.com2fun(client=openai.OpenAI(api_key="your_api_key"))
 ```
 
-### Flat
-
+Anthropic is also supported:
 ```
-@functools.partial(com2fun.com2fun, SF=com2fun.FlatSF)
-def text2tex(text: str) -> str:
-    pass
-
-In  [1]: text2tex.add_example("x divided by y")(r"\frac{x}{y}")
-In  [2]: print(text2tex.invoke_prompt("integrate f(x) from negative infinity to infinity"))
-def text2tex(text: str) -> str:
-    pass
-###
-'x divided by y'
----
-\frac{x}{y}
-###
-'integrate f(x) from negative infinity to infinity'
----
-
-```
-
-### Template
-This format is inspired by [lambdaprompt](https://github.com/approximatelabs/lambdaprompt).
-
-```
-In  [1]: text2tex = com2fun.prompt("{} into latex: ")
-In  [2]: text2tex.add_example("x divided by y")(r"\frac{x}{y}")
-In  [3]: print(text2tex.invoke_prompt("integrate f(x) from negative infinity to infinity"))
-x divided by y into latex: \frac{x}{y}
-integrate f(x) from negative infinity to infinity into latex: 
+@com2fun.com2fun(
+    SF=com2fun.SF.anthropic.AnthropicChatSF, client=anthropic.Anthropic()
+)
 ```
