@@ -3,26 +3,26 @@
 
 import re
 
-from ..func_def import InOutExample
+from ...func_def import InOutExample
 
 INPUT_PREFIX = ">>> "
 INDENT_REGEX = re.compile(r"^\s*")
 
 
-def intepreter_header():
+def interpreter_header():
     return [
-        "Python 3.10.8 (main, Nov 24 2022, 14:13:03) [GCC 11.2.0] on linux\n"
-        'Type "help", "copyright", "credits" or "license" for more information.\n'
+        'Python 3.10.8 (main, Nov 24 2022, 14:13:03) [GCC 11.2.0] on linux\nType "help", "copyright", "credits" or "license" for more information.\n'
     ]
 
 
-def func_query_format():
-    #  return [INPUT_PREFIX + "1+1\n", "2\n"]
+def func_query_format(input_prefix=INPUT_PREFIX):
     return [
-        INPUT_PREFIX + "1+1\n",
+        input_prefix + "1+1\n",
         "2\n",
-        INPUT_PREFIX + "import strongai\n",
-        INPUT_PREFIX + 'strongai._top("university", 3)\n',
+        input_prefix
+        + "import strongai\n"
+        + input_prefix
+        + 'strongai._top("university", 3)\n',
         "['MIT', 'Stanford', 'Harvard']\n",
     ]
 
@@ -43,7 +43,7 @@ def func_definition(func_def, input_prefix=INPUT_PREFIX):
         + f"strongai._{func_def.intension.name}(*locals())\n"
     )
     prompts.append(input_prefix + "\n")
-    return prompts
+    return "".join(prompts)
 
 
 def invoke(func_def, args, kwargs):
@@ -58,40 +58,25 @@ def invoke(func_def, args, kwargs):
     )
 
 
-def query(func_def, args, kwargs, read_out):
-    return [INPUT_PREFIX + read_out.cmd.format(invoke(func_def, args, kwargs)) + "\n"]
+def query(func_def, args, kwargs, read_out, input_prefix=INPUT_PREFIX):
+    return [input_prefix + read_out.cmd.format(invoke(func_def, args, kwargs)) + "\n"]
 
 
-def chat_query(func_def, args, kwargs, read_out):
-    return read_out.cmd.format(invoke(func_def, args, kwargs))
-
-
-def example(func_def, example: InOutExample, read_out):
+def example(func_def, example: InOutExample, read_out, input_prefix=INPUT_PREFIX):
     prompts = []
     if example.comments is not None:
         prompts += [
-            INPUT_PREFIX + "# " + l for l in example.comments.splitlines(keepends=True)
+            input_prefix + "# " + l for l in example.comments.splitlines(keepends=True)
         ]
         if prompts[-1][-1] != "\n":
             prompts[-1] += "\n"
     prompts += [
-        INPUT_PREFIX
+        input_prefix
         + read_out.cmd.format(invoke(func_def, example.args, example.kwargs))
         + "\n"
     ]
+    prompts = ["".join(prompts)]
     prompts.append(
         read_out.serialize(example.result) + "\n",
     )
     return prompts
-
-
-def chat_example(func_def, example: InOutExample, read_out):
-    prompts = []
-    if example.comments is not None:
-        prompts += ["# " + l for l in example.comments.splitlines(keepends=True)]
-        if prompts[-1][-1] != "\n":
-            prompts[-1] += "\n"
-    prompts += [read_out.cmd.format(invoke(func_def, example.args, example.kwargs))]
-    user_content = "".join(prompts)
-    assistant_content = read_out.serialize(example.result)
-    return user_content, assistant_content

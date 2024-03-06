@@ -6,9 +6,16 @@ authors = ["Zhengmian Hu <huzhengmian@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.7.1"
+python = ">=3.8"
 openai = ">=1.9.0"
+anthropic = {version = ">=0.18.1", optional = true}
 
+[tool.poetry.group.dev.dependencies]
+python-dotenv = ">=1.0.0"
+
+[tool.poetry.extras]
+anthropic = ["anthropic"]
+all=["anthropic"]
 
 [build-system]
 requires = ["poetry-core"]

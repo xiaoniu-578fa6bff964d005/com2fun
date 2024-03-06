@@ -1,21 +1,17 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+from functools import partial
+from .func_def import to_func_def
+from . import simulated_function as SF
+from .simulated_function.openai import OpenAIChatSF
+from .composer import DefaultCompletionComposer, DefaultChatComposer
 
-from .func_def import *
-from .simulated_function import *
 
-
-def com2fun(func, SF=ChatBasedPythonInterpreterSF):
+def _com2fun(func, SF=OpenAIChatSF, composer=DefaultChatComposer(), **SF_kwargs):
     func_def = to_func_def(func)
-    return SF(func_def)
+    return SF(func_def=func_def, composer=composer, **SF_kwargs)
 
 
-def prompt(*args, stop="\n", SF=TemplateSF, **kwargs):
-    func_def = template_to_func_def(*args, **kwargs)
-    sf = SF(func_def)
-    if stop is not None:
-        if isinstance(stop, list):
-            sf.param["stop"] = stop
-        else:
-            sf.param["stop"] = [stop]
-    return sf
+def com2fun(func=None, **kwargs):
+    if func is None:
+        return partial(_com2fun, **kwargs)
+    else:
+        return _com2fun(func, **kwargs)

@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from abc import ABC, abstractmethod
 from typing import Any
 import functools
 
-from ..func_def import *
+from ..func_def import InOutExample, FunctionDefinition
+from ..composer import Composer
 
 
 class InvalidCompletionResult(Exception):
@@ -19,8 +17,13 @@ class InvalidCompletionResult(Exception):
 
 
 class SimulatedFunction(ABC):
-    def __init__(self, func_def: FunctionDefinition):
+    def __init__(
+        self,
+        func_def: FunctionDefinition,
+        composer: Composer,
+    ):
         self.func_def = func_def
+        self.composer = composer
         super().__init__()
 
     @abstractmethod

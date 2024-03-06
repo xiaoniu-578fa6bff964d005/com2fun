@@ -1,9 +1,27 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from dataclasses import dataclass
 import inspect
 from typing import Optional, Any
+
+
+def _remove_com2fun_decorator(full_source: str) -> list[str]:
+    lines = full_source.splitlines(keepends=True)
+    outs = []
+    i = 0
+    indent = lambda l: len(l) - len(l.lstrip())
+    while i < len(lines):
+        l = lines[i]
+        l_indent = indent(l)
+        if l[l_indent] == "@" and "com2fun" in l:
+            # encounter com2fun decorator
+            i += 1
+            while indent(lines[i]) > l_indent:
+                i += 1
+            if lines[i].strip() == ")":
+                i += 1
+            continue
+        outs.append(l)
+        i += 1
+    return outs
 
 
 @dataclass
@@ -22,17 +40,7 @@ class FunctionIntension:
         if self.comments:
             r.append(self.comments)
 
-        def is_com2fun_decorator(l):
-            l = l.strip()
-            if l.startswith("@") and "com2fun" in l:
-                return True
-            return False
-
-        r += [
-            l
-            for l in self.full_source.splitlines(keepends=True)
-            if not is_com2fun_decorator(l)
-        ]
+        r += _remove_com2fun_decorator(self.full_source)
 
         def remove_common_prefix(r):
             prefix = min([len(l) - len(l.lstrip()) for l in r])
@@ -69,7 +77,6 @@ class FunctionDefinition:
 
 
 def to_func_def(func) -> FunctionDefinition:
-
     func_intension = FunctionIntension(
         name=func.__name__,
         comments=inspect.getcomments(func),
