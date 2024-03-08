@@ -11,7 +11,7 @@ def _remove_com2fun_decorator(full_source: str) -> list[str]:
     while i < len(lines):
         l = lines[i]
         l_indent = indent(l)
-        if l[l_indent] == "@" and "com2fun" in l:
+        if l_indent < len(l) and l[l_indent] == "@" and "com2fun" in l:
             # encounter com2fun decorator
             i += 1
             while indent(lines[i]) > l_indent:
